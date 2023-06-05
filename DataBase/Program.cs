@@ -13,7 +13,11 @@ namespace DataBase
         static void Main(string[] args)
         {
             List<User> users = new List<User>();
+            List<Work> works = new List<Work>();
             List<UserViewModel> usersViewModel = new List<UserViewModel>();
+            List<WorkViewModel> workViewModel = new List<WorkViewModel>();
+            List<UsersWorks> usersWorks = new List<UsersWorks>();
+            List<UsersWorksViewModel> usersWorksViewModels = new List<UsersWorksViewModel>();
             string str = "Data Source = DESKTOP-IUQD35B\\SQLEXPRESS01;Initial Catalog=Users; Integrated Security=SSPI";
             using (SqlConnection connection = new SqlConnection(str))
             {
@@ -25,7 +29,6 @@ namespace DataBase
                     while (reader.Read())
                     {
 
-                        string gender;
                         User user = new User();
                         Int32.TryParse(reader[0].ToString(), out int userID);
                         Int32.TryParse(reader[2].ToString(), out int userAge);
@@ -54,37 +57,38 @@ namespace DataBase
                 {
                     while (reader.Read())
                     {
-                        Console.WriteLine("ID:" + reader[0] + ",Наименование работы:" + reader[1]);
+                        Work work = new Work();
+                        Int32.TryParse(reader[0].ToString(),out int workID);
+                        work.ID = workID;
+                        work.WorkName = reader[1].ToString();
+                        works.Add(work);
                     }
+                }
+                workViewModel = works.Select(MapWorkToWorkViewModel).ToList();
+                foreach (var i in workViewModel)
+                {
+                    Console.WriteLine(i.ToString());
                 }
                 command = new SqlCommand("SELECT i.*, u.Name, u.Age, u.Gender, y.WorkName FROM\r\nUsersWorks as i Join Users as u on i.UserId=u.ID \r\njoin Work as y on i.WorkId=y.ID;", connection);
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        //string gender = Int32.TryParse(reader[5].ToString(), out int genderIndex)  ?
-                        //    genderIndex == 0 ? 
-                        //        "Мужчина" 
-                        //        : "Женщина"
-                        //    : "Неизвестный пол";
-                        string gender;
-                        if (Int32.TryParse(reader[5].ToString(), out int genderIndex))
-                        {
-                            if (genderIndex == 0)
-                            {
-                                gender = "Мужчина";
-                            }
-                            else
-                            {
-                                gender = "Женщина";
-                            }
-                        }
-                        else
-                        {
-                            gender = "Неизвестный пол";
-                        }
-                        Console.WriteLine("ID:" + reader[0] + ",Юзер ID:" + reader[1] + ",Работа ID:" + reader[2] + ",Имя:" + reader[3] + ",Лет:" + reader[4] + ",Пол:" + gender + ",Название работы:" + reader[6]);
+                        
+                        UsersWorksViewModel usersWorksViewModel = new UsersWorksViewModel();
+                        usersWorksViewModel.ID = (int)reader[0];
+                        usersWorksViewModel.UserID = (int)reader[1];
+                        usersWorksViewModel.WorkID = (int)reader[2];
+                        usersWorksViewModel.Name = reader[3].ToString();
+                        usersWorksViewModel.Age = (int)reader[4];
+                        usersWorksViewModel.Gender = GetGender((int)reader[5]);
+                        usersWorksViewModel.NameWork = reader[6].ToString();
+                        usersWorksViewModels.Add(usersWorksViewModel);
                     }
+                }
+                foreach (var i in usersWorksViewModels)
+                {
+                    Console.WriteLine(i.ToString());
                 }
                 //command = new SqlCommand("INSERT INTO Users (Name, Age, Gender) VALUES ('Аркадий', 20, 0);", connection);
                 //command.ExecuteNonQuery();
@@ -112,22 +116,49 @@ namespace DataBase
             userViewModel.ID = user.ID;
             userViewModel.Name = user.Name;
             userViewModel.Age = user.Age;
-            if (Int32.TryParse(user.Gender.ToString(), out int genderIndex))
+            userViewModel.Gender = GetGender(user.Gender);
+            return userViewModel;
+        }
+
+        static WorkViewModel MapWorkToWorkViewModel(Work work)
+        {
+            WorkViewModel workViewModel = new WorkViewModel();
+            workViewModel.ID = work.ID;
+            workViewModel.WorkName = work.WorkName;
+            return workViewModel;
+        }
+
+        static UsersWorksViewModel MapUsersWorksToUsersWorksViewModel(UsersWorks usersWorks)
+        {
+            UsersWorksViewModel usersWorksViewModel = new UsersWorksViewModel();
+            usersWorksViewModel.ID = usersWorks.ID;
+            usersWorksViewModel.UserID = usersWorks.UserID;
+            usersWorksViewModel.WorkID = usersWorks.WorkID;
+            return usersWorksViewModel;
+        }
+        static string GetGender(int gender)
+        {
+            if (Int32.TryParse(gender.ToString(), out int genderIndex))
             {
                 if (genderIndex == 0)
                 {
-                    userViewModel.Gender = "Мужчина";
+                    return "Мужчина";
                 }
                 else
                 {
-                    userViewModel.Gender = "Женщина";
+                    return  "Женщина";
                 }
             }
             else
             {
-                userViewModel.Gender = "Неизвестный пол";
+                return "Неизвестный пол";
             }
-            return userViewModel;
+            //тернарный оператор ?:
+            //string gender = Int32.TryParse(reader[5].ToString(), out int genderIndex)  ?
+            //    genderIndex == 0 ? 
+            //        "Мужчина" 
+            //        : "Женщина"
+            //    : "Неизвестный пол";
         }
     }
 }
