@@ -128,14 +128,6 @@ namespace DataBase
             return workViewModel;
         }
 
-        static UsersWorksViewModel MapUsersWorksToUsersWorksViewModel(UsersWorks usersWorks)
-        {
-            UsersWorksViewModel usersWorksViewModel = new UsersWorksViewModel();
-            usersWorksViewModel.ID = usersWorks.ID;
-            usersWorksViewModel.UserID = usersWorks.UserID;
-            usersWorksViewModel.WorkID = usersWorks.WorkID;
-            return usersWorksViewModel;
-        }
         static string GetGender(int gender)
         {
             if (Int32.TryParse(gender.ToString(), out int genderIndex))
